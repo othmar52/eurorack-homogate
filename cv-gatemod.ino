@@ -22,11 +22,14 @@ const int GATE_OUTPUT_PIN = 3; // Gate output
 const int LED_SUPRESS_GATE_PIN = 5;  // indicates a suppressed gate, must support PWM
 const int LED_ADD_GATE_PIN = 6;      // indicates an added gate, must support PWM
 
+const int NOTCH_AHEAD_PIN = 4;
+const int NOTCH_BEHIND_PIN = 7;
+
 const int LED_GATE_IN_PIN = 8;
 const int LED_GATE_OUT_PIN = 9;
 
-const int GATE_LENGTH_POT_PIN = A2;
-const int GATE_MOD_POT_PIN = A3;
+const int GATE_LENGTH_POT_PIN = A3;
+const int GATE_MOD_POT_PIN = A2;
 
 const int potentiometerMaxValue = 680; // maximum retrieved value of analogRead() with a 10K trimpot
 
@@ -52,6 +55,9 @@ unsigned long outgoingGateInterval = 0;
 unsigned long outgoingGateLength = 0;
 
 
+bool notchAheadButtonState = LOW;
+bool notchBehindButtonState = LOW;
+
 
 unsigned int maxGateModPerMinute = 100; // maximum of added or supressed gates per minute
 unsigned long lastAdditionalGateMilliSecond = 0;
@@ -59,6 +65,8 @@ unsigned long lastSupressedGateMilliSecond = 0;
 bool nowAddingGate = false;
 bool nowSupressingGate = false;
 
+unsigned int addGatesQueue = 0;
+unsigned int supressGatesQueue = 0;
 
 const int minimumGapLength = 2; // milliseconds between LOW and HIGH; so maximum gate length will be gate interval minus this value [ms]
 
@@ -89,7 +97,7 @@ void checkGateOutHigh() {
   if (outgoingGateState == HIGH) {
     return;  
   }
-
+  /*
   if(getSupressGateInterval() > 0) {
     if(currentMilliSecond - lastSupressedGateMilliSecond > getSupressGateInterval()) {
       lastSupressedGateMilliSecond = currentMilliSecond;
@@ -102,11 +110,19 @@ void checkGateOutHigh() {
       return;
     }
   }
+  */
+  
+
+  if (supressGatesQueue > 0) {
+      Serial.println("suppressing gate");
+      nowSupressingGate = true;
+      supressGatesQueue--;
+  }
   
   if (nowSupressingGate == true) {
     return;
   }
-
+  /**
   if(getAddGateInterval() > 0) {
     
     
@@ -133,10 +149,35 @@ void checkGateOutHigh() {
       ////digitalWrite(LED_ADD_GATE_PIN, LOW);
       gateAddLedIndicator(LOW);
   }
-  
+  */
+
+  if (addGatesQueue > 0) {
+      Serial.print("adding gate...  interval is ");
+      Serial.println(getAddGateInterval());
+      gateOutHigh();
+      gateOutLow();
+      addGatesQueue--;
+  }
 
   if(incomingGateState != outgoingGateState) {
     gateOutHigh();
+  }
+}
+
+void loopPushButtons() {
+  if(digitalRead(NOTCH_AHEAD_PIN) != notchAheadButtonState) {
+    notchAheadButtonState = digitalRead(NOTCH_AHEAD_PIN);
+    if(notchAheadButtonState == HIGH) {
+      addGatesQueue++;  
+    }
+    Serial.print("notch ahead "); Serial.println(notchAheadButtonState);
+  }
+  if(digitalRead(NOTCH_BEHIND_PIN) != notchBehindButtonState) {
+    notchBehindButtonState = digitalRead(NOTCH_BEHIND_PIN);
+    if(notchBehindButtonState == HIGH) {
+      supressGatesQueue++;  
+    }
+    Serial.print("notch behind "); Serial.println(notchBehindButtonState);
   }
 }
 
@@ -209,7 +250,11 @@ void checkGateOutLow() {
   }
   // the current gate length is bigger than incoming gate length map(value, fromLow, fromHigh, toLow, toHigh)
   unsigned int requestedGateLength = map(analogRead(GATE_LENGTH_POT_PIN), 0, potentiometerMaxValue, incomingGateLength, incomingGateInterval-minimumGapLength);
-
+  if (requestedGateLength < minimumGapLength) {
+    Serial.print("DANGER: ");
+    Serial.println(requestedGateLength);
+    requestedGateLength = minimumGapLength;
+  }
   if(currentMilliSecond >= outgoingGateLastOpen + requestedGateLength) {
     gateOutLow();
   }
@@ -245,6 +290,7 @@ void loop()
   currentMilliSecond = millis();
   checkGateOutLow();
   checkGateOutHigh();
+  loopPushButtons();
 }
 
 
@@ -252,6 +298,9 @@ void loop()
 void setupCvClocksAndLeds() {
   // Interrupts
   pinMode(CLOCK_INPUT_PIN, INPUT);
+  pinMode(NOTCH_AHEAD_PIN, INPUT_PULLUP);
+  pinMode(NOTCH_BEHIND_PIN, INPUT_PULLUP);
+
   pinMode(GATE_OUTPUT_PIN, OUTPUT);
   pinMode(LED_GATE_IN_PIN, OUTPUT);
   pinMode(LED_GATE_OUT_PIN, OUTPUT);

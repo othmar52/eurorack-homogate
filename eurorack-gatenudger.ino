@@ -15,56 +15,69 @@
  * TODO: fast gate length change bug
  * on very fast decreasing gate length from max to min we get some unwanted shift
  */
+#define NUM_INSTANCES 2
 
-const int CLOCK_INPUT_PIN = 2;  // Input signal pin, must be usable for interrupts
-const int GATE_OUTPUT_PIN = 3;  // Gate output
+const int CLOCK_INPUT_PIN[NUM_INSTANCES] = {2, 3};  // Input signal pin, must be usable for interrupts
+const int GATE_OUTPUT_PIN[NUM_INSTANCES] = {4, 5};  // Gate output
 
-const int NUDGE_AHEAD_PIN = 4;  // pushbutton
-const int NUDGE_BEHIND_PIN = 7; // pushbutton
+const int NUDGE_AHEAD_PIN[NUM_INSTANCES] = {6, 7};  // pushbutton
+const int NUDGE_BEHIND_PIN[NUM_INSTANCES] = {8, 9}; // pushbutton
 
-const int LED_GATE_IN_PIN = 8;  // led indicating incoming clock pulses
-const int LED_GATE_OUT_PIN = 9; // led indicating outgoing clock pulses
+const int LED_GATE_IN_PIN[NUM_INSTANCES] = {10, 11};  // led indicating incoming clock pulses
+const int LED_GATE_OUT_PIN[NUM_INSTANCES] = {12, 13}; // led indicating outgoing clock pulses
 
-const int GATE_LENGTH_POT_PIN = A3; // potentiometer to increase gate length
+const int GATE_LENGTH_POT_PIN[NUM_INSTANCES] = {A0, A1}; // potentiometer to increase gate length
+const int OFFSET_POT_PIN[NUM_INSTANCES] = {A2, A3}; // potentiometer for time offset
 const int potentiometerMaxValue = 680; // maximum retrieved value of analogRead() with the 10K trimpot i am using. shouldn't this be 1024?
 
 unsigned long currentMilliSecond = 0;
 
-bool incomingGateState = LOW;
-unsigned long incomingGateLastOpen = 0;
-unsigned long incomingGateInterval = 0;
-unsigned long incomingGateLength = 0;
+bool incomingGateState[NUM_INSTANCES] = {LOW, LOW};
+unsigned long incomingGateLastOpen[NUM_INSTANCES] = {0, 0};
+unsigned long incomingGateInterval[NUM_INSTANCES] = {0, 0};
+unsigned long incomingGateLength[NUM_INSTANCES] = {0, 0};
 
-bool outgoingGateState = LOW;
-unsigned long outgoingGateLastOpen = 0;
+bool outgoingGateState[NUM_INSTANCES] = {LOW, LOW};
+unsigned long outgoingGateLastOpen[NUM_INSTANCES] = {0, 0};
 
-bool nudgeAheadButtonState = LOW;
-bool nudgeBehindButtonState = LOW;
+bool nudgeAheadButtonState[NUM_INSTANCES] = {LOW, LOW};
+bool nudgeBehindButtonState[NUM_INSTANCES] = {LOW, LOW};
 
-bool nowSupressingGate = false;
+bool nowSupressingGate[NUM_INSTANCES] = {false, false};
 
-unsigned int addGatesQue = 0;
-unsigned int supressGatesQue = 0;
+unsigned int addGatesQue[NUM_INSTANCES] = {0, 0};
+unsigned int supressGatesQue[NUM_INSTANCES] = {0, 0};
+
+bool currentlySupressingIncomingGate[NUM_INSTANCES] = {false, false};
 
 const int minimumGapLength = 2; // milliseconds between LOW and HIGH; so maximum gate length will be gate interval minus this value [milliseconds]
 
 void setup()
 {
+  for (uint8_t i=0; i<NUM_INSTANCES; i++) {
+    pinMode(CLOCK_INPUT_PIN[i], INPUT);
+  
+    pinMode(NUDGE_AHEAD_PIN[i], INPUT_PULLUP);
+    pinMode(NUDGE_BEHIND_PIN[i], INPUT_PULLUP);
+  
+    pinMode(GATE_OUTPUT_PIN[i], OUTPUT);
+    pinMode(LED_GATE_IN_PIN[i], OUTPUT);
+    pinMode(LED_GATE_OUT_PIN[i], OUTPUT);
+  }
   // Interrupts
-  pinMode(CLOCK_INPUT_PIN, INPUT);
+  // arguments seems to be impossible for interrupts!?
   attachInterrupt(
-    digitalPinToInterrupt(CLOCK_INPUT_PIN),
-    handleIncomingGateChange,
+    digitalPinToInterrupt(CLOCK_INPUT_PIN[0]),
+    handleIncomingGateChange1,
     CHANGE
   );
-
-  pinMode(NUDGE_AHEAD_PIN, INPUT_PULLUP);
-  pinMode(NUDGE_BEHIND_PIN, INPUT_PULLUP);
-
-  pinMode(GATE_OUTPUT_PIN, OUTPUT);
-  pinMode(LED_GATE_IN_PIN, OUTPUT);
-  pinMode(LED_GATE_OUT_PIN, OUTPUT);
-  // Serial.begin(115200);
+  attachInterrupt(
+    digitalPinToInterrupt(CLOCK_INPUT_PIN[1]),
+    handleIncomingGateChange2,
+    CHANGE
+  );
+  Serial.begin(115200);
+  Serial.print("attaching interrupts");
 }
 
 void loop()
@@ -78,26 +91,28 @@ void loop()
 /**
  * send gate out high to TRS jack with led indication
  */
-void gateOutHigh() {
-  if (outgoingGateState == HIGH) {
+void gateOutHigh(uint8_t i) {
+  if (outgoingGateState[i] == HIGH) {
     return;
   }
-  outgoingGateState = HIGH;
-  outgoingGateLastOpen = currentMilliSecond;
-  digitalWrite(GATE_OUTPUT_PIN, LOW);   // inverted
-  digitalWrite(LED_GATE_OUT_PIN, HIGH);
+  outgoingGateState[i] = HIGH;
+  outgoingGateLastOpen[i] = currentMilliSecond;
+  digitalWrite(GATE_OUTPUT_PIN[i], LOW);   // inverted
+  digitalWrite(LED_GATE_OUT_PIN[i], HIGH);
+
 }
 
 /**
  * send gate out low to TRS jack with led indication
  */
-void gateOutLow() {
-  if (outgoingGateState == LOW) {
+void gateOutLow(uint8_t i) {
+  if (outgoingGateState[i] == LOW) {
     return;
   }
-  outgoingGateState = LOW;
-  digitalWrite(GATE_OUTPUT_PIN, HIGH); // inverted
-  digitalWrite(LED_GATE_OUT_PIN, LOW);
+  outgoingGateState[i] = LOW;
+  digitalWrite(GATE_OUTPUT_PIN[i], HIGH); // inverted
+  digitalWrite(LED_GATE_OUT_PIN[i], LOW);
+
 }
 
 /**
@@ -105,25 +120,30 @@ void gateOutLow() {
  * but avoid to send a new gate in case we have to supress the current gate pulse
  */
 void checkGateOutHigh() {
-  if (outgoingGateState == HIGH) {
-    // already high - no need for further checks
-    return;  
-  }
-
-  if (supressGatesQue > 0) {
-    nowSupressingGate = true;
-    supressGatesQue--;
-    return;
-  }
-
-  if (addGatesQue > 0) {
-    gateOutHigh();
-    gateOutLow();
-    addGatesQue--;
-  }
-
-  if (incomingGateState == HIGH) {
-    gateOutHigh();
+  for (uint8_t i=0; i<NUM_INSTANCES; i++) {
+    if (outgoingGateState[i] == HIGH) {
+      // already high - no need for further checks
+      continue;  
+    }
+  
+    if (supressGatesQue[i] > 0) {
+      nowSupressingGate[i] = true;
+      supressGatesQue[i]--;
+      Serial.println("suppressing gate");
+      currentlySupressingIncomingGate[i] = true;
+      continue;
+    }
+  
+    if (addGatesQue[i] > 0) {
+      Serial.println("adding gate");
+      gateOutHigh(i);
+      gateOutLow(i);
+      addGatesQue[i]--;
+    }
+  
+    if (incomingGateState[i] == HIGH && currentlySupressingIncomingGate[i] == false) {
+      gateOutHigh(i);
+    }
   }
 }
 
@@ -132,33 +152,36 @@ void checkGateOutHigh() {
  * but take the increase gate length pot value into account
  */
 void checkGateOutLow() {
-  if (outgoingGateState == LOW) {
-    // already low - no need for further checks
-    return;  
-  }
-
-  // check if we have an increased gate length
-  int valueGateLengthPot = analogRead(GATE_LENGTH_POT_PIN);
-
-  if (valueGateLengthPot < 2) {
-    // potentiometer is fully turned counter clockwise
-    // no gate length modification - just pass through the incoming gate pulses
-    if (incomingGateState == LOW) {
-      gateOutLow();
+  for (uint8_t i=0; i<NUM_INSTANCES; i++) {
+    if (outgoingGateState[i] == LOW) {
+      // already low - no need for further checks
+      continue;  
     }
-    return;
+  
+    // check if we have an increased gate length
+    int valueGateLengthPot = analogRead(GATE_LENGTH_POT_PIN[i]);
+  
+    if (valueGateLengthPot < 2) {
+      // potentiometer is fully turned counter clockwise
+      // no gate length modification - just pass through the incoming gate pulses
+      if (incomingGateState[i] == LOW) {
+        gateOutLow(i);
+      }
+      continue;
+    }
+  
+    // we do have an increased gate length due to potentiometer position
+    int modifiedGateLength = calculateModifiedGateLengthMilliSeconds(
+      valueGateLengthPot,
+      i
+    );
+  
+    // check if it's time to close the open gate
+    if (currentMilliSecond < outgoingGateLastOpen[i] + modifiedGateLength) {
+      continue;
+    }
+    gateOutLow(i);
   }
-
-  // we do have an increased gate length due to potentiometer position
-  int modifiedGateLength = calculateModifiedGateLengthMilliSeconds(
-    valueGateLengthPot
-  );
-
-  // check if it's time to close the open gate
-  if (currentMilliSecond < outgoingGateLastOpen + modifiedGateLength) {
-    return;
-  }
-  gateOutLow();
 }
 
 /*
@@ -166,18 +189,18 @@ void checkGateOutLow() {
  * with the potentiometer fully turned clockwise the gate length will
  * be as long as the incoming gate interval minus 2 milliseconds
  */
-int calculateModifiedGateLengthMilliSeconds(int potentiometerValue) {
+int calculateModifiedGateLengthMilliSeconds(int potentiometerValue, uint8_t i) {
   int requestedGateLength = map(
     potentiometerValue,                    // value
     0,                                     // fromLow
     potentiometerMaxValue,                 // fromHigh
-    incomingGateLength,                    // toLow
-    incomingGateInterval-minimumGapLength  // toHigh
+    incomingGateLength[i],                    // toLow
+    incomingGateInterval[i]-minimumGapLength  // toHigh
   );
   
   // just to make sure we have no quirks
-  if (requestedGateLength < incomingGateLength) {
-    requestedGateLength = incomingGateLength;
+  if (requestedGateLength < incomingGateLength[i]) {
+    requestedGateLength = incomingGateLength[i];
   }
   if (requestedGateLength < minimumGapLength) {
     requestedGateLength = minimumGapLength;
@@ -185,55 +208,70 @@ int calculateModifiedGateLengthMilliSeconds(int potentiometerValue) {
   return requestedGateLength;
 }
 
+void handleIncomingGateChange1() {
+  //Serial.println("handleIncomingGateChange1");
+  handleIncomingGateChange(0);
+}
+void handleIncomingGateChange2() {
+  //Serial.println("handleIncomingGateChange2");
+  handleIncomingGateChange(1);
+}
+
 /*
  * incoming gate has changed its state
  */
-void handleIncomingGateChange() {
-  if (digitalRead(CLOCK_INPUT_PIN) == HIGH) {
-    handleIncomingGateChangeToLow();
+void handleIncomingGateChange(uint8_t i) {
+  if (digitalRead(CLOCK_INPUT_PIN[i]) == HIGH) {
+    handleIncomingGateChangeToLow(i);
     return;
   }
-  handleIncomingGateChangeToHigh();
+  handleIncomingGateChangeToHigh(i);
 }
 
 /*
  * incoming gate has changed its state to HIGH
  * set a few variables and make sure the LED is on
  */
-void handleIncomingGateChangeToHigh() {
-  incomingGateInterval = currentMilliSecond - incomingGateLastOpen;
-  incomingGateLastOpen = currentMilliSecond;
-  digitalWrite(LED_GATE_IN_PIN, HIGH);
-  incomingGateState = HIGH;
+void handleIncomingGateChangeToHigh(uint8_t i) {
+  incomingGateInterval[i] = currentMilliSecond - incomingGateLastOpen[i];
+  incomingGateLastOpen[i] = currentMilliSecond;
+  digitalWrite(LED_GATE_IN_PIN[i], HIGH);
+  incomingGateState[i] = HIGH;
+  //Serial.println("handleIncomingGateChangeToHigh");
 }
 
 /*
  * incoming gate has changed its state to LOW
  * set a few variables and make sure the LED is off
  */
-void handleIncomingGateChangeToLow() {
-  incomingGateLength = currentMilliSecond - incomingGateLastOpen;
-  digitalWrite(LED_GATE_IN_PIN, LOW);
-  incomingGateState = LOW;
-  nowSupressingGate = false;
+void handleIncomingGateChangeToLow(uint8_t i) {
+  currentlySupressingIncomingGate[i] = false;
+  incomingGateLength[i] = currentMilliSecond - incomingGateLastOpen[i];
+  digitalWrite(LED_GATE_IN_PIN[i], LOW);
+  incomingGateState[i] = LOW;
+  nowSupressingGate[i] = false;
 }
 
 /*
  * check if push button states has changed and add changes to a que
  */
 void loopPushButtons() {
-  if (digitalRead(NUDGE_AHEAD_PIN) != nudgeAheadButtonState) {
-    nudgeAheadButtonState = digitalRead(NUDGE_AHEAD_PIN);
-    if (nudgeAheadButtonState == HIGH) {
-      // shouldn't it be adding instead of supressing? anyway, it works...
-      supressGatesQue++;
+  for (uint8_t i=0; i<NUM_INSTANCES; i++) {
+    if (digitalRead(NUDGE_AHEAD_PIN[i]) != nudgeAheadButtonState[i]) {
+      nudgeAheadButtonState[i] = digitalRead(NUDGE_AHEAD_PIN[i]);
+      if (nudgeAheadButtonState[i] == HIGH) {
+        // shouldn't it be adding instead of supressing? anyway, it works...
+        supressGatesQue[i]++;
+        Serial.println("got button +");
+      }
     }
-  }
-  if (digitalRead(NUDGE_BEHIND_PIN) != nudgeBehindButtonState) {
-    nudgeBehindButtonState = digitalRead(NUDGE_BEHIND_PIN);
-    if (nudgeBehindButtonState == HIGH) {
-      // shouldn't it be supressing instead of adding? anyway, it works...
-      addGatesQue++;
+    if (digitalRead(NUDGE_BEHIND_PIN[i]) != nudgeBehindButtonState[i]) {
+      nudgeBehindButtonState[i] = digitalRead(NUDGE_BEHIND_PIN[i]);
+      if (nudgeBehindButtonState[i] == HIGH) {
+        // shouldn't it be supressing instead of adding? anyway, it works...
+        addGatesQue[i]++;
+        Serial.println("got button -");
+      }
     }
   }
 }

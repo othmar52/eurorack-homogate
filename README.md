@@ -1,9 +1,12 @@
 # eurorack homogate
 
 arduino based eurorack module to  
-*) increase or decrease length of incoming gate
-*) apply time offset to a gate
-*) add or remove single gate pulses
+ - increase or decrease length of incoming gate
+ - apply time offset to a gate
+ - add or remove single gate pulses
+
+[![Eurorack DIY homogate disassembled](media/homogate-disassembled-1.jpg "Eurorack homogate disassembled")](https://github.com/othmar52/eurorack-homogate/blob/master/media/homogate-disassembled-1.jpg?raw=true)  
+[![Eurorack DIY homogate assembled](media/homogate-assembled-1.jpg "Eurorack homogate assembled")](https://github.com/othmar52/eurorack-homogate/blob/master/media/homogate-assembled-1.jpg?raw=true)  
 
 this module needs a steady (homogeneously) incoming gate/clock preferably from a clock divider.  
 the "unit" homogate is dealing with is always the time interval of the incoming gate.  

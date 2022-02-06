@@ -2,7 +2,7 @@
 
 arduino based eurorack module to  
  - increase or decrease length of incoming gate
- - apply time offset to a gate
+ - apply time offset to incoming gate
  - add or remove single gate pulses
 
 [![Eurorack DIY homogate disassembled](media/homogate-disassembled-1.jpg "Eurorack homogate disassembled")](https://github.com/othmar52/eurorack-homogate/blob/master/media/homogate-disassembled-1.jpg?raw=true)  
@@ -23,7 +23,7 @@ this module gives us the possibility to nudge a locked sequence left and right o
 
 ## parts
  - Arduino Nano Every
- - 5 x 3.5mm TRS female jacks (CV clock in/out)
+ - 5 x 3.5mm TS female jacks (CV clock in/out)
  - 5 x NPN Transistor N3904 (CV in/out circuit)
  - 15 x Resistor 10K (CV in/out circuit)
  - 2 x Resistor 1K (CV out circuit)
@@ -38,4 +38,11 @@ this module gives us the possibility to nudge a locked sequence left and right o
 
 ## diy PCB schematics
 [![Eurorack DIY homogate PCB](media/homogate-pcb.png "Eurorack DIY homogate PCB")](https://github.com/othmar52/eurorack-homogate/blob/master/media/homogate-pcb.png?raw=true)  
+
+module width is **6 HP**  
+module depth incl. power bus cable is **38 mm**  
+i measured a power consumption of **2 mA** (+12V) but i dont know if this is a reasonable value. maybe you should expect the official **19 mA** for the arduino nano instead!?  
+**-12V** and **+5V** lines are not used  
+
+[Homogate on modulargrid](https://www.modulargrid.net/e/other-unknown-homogate)
 

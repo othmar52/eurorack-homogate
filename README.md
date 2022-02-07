@@ -5,8 +5,10 @@ arduino based eurorack module to
  - apply time offset to incoming gate
  - add or remove single gate pulses
 
-[![Eurorack DIY homogate disassembled](media/homogate-disassembled-1.jpg "Eurorack homogate disassembled")](https://github.com/othmar52/eurorack-homogate/blob/master/media/homogate-disassembled-1.jpg?raw=true)  
-[![Eurorack DIY homogate assembled](media/homogate-assembled-1.jpg "Eurorack homogate assembled")](https://github.com/othmar52/eurorack-homogate/blob/master/media/homogate-assembled-1.jpg?raw=true)  
+
+[<img src="media/homogate-disassembled-1.jpg" height="260" />](https://github.com/othmar52/eurorack-homogate/blob/master/media/homogate-disassembled-1.jpg?raw=true)
+[<img src="media/homogate-frontplate.jpg" height="260" />](https://github.com/othmar52/eurorack-homogate/blob/master/media/homogate-frontplate.jpg?raw=true)
+[<img src="media/homogate-assembled-1.jpg" height="260" />](https://github.com/othmar52/eurorack-homogate/blob/master/media/homogate-assembled-1.jpg?raw=true)  
 
 this module needs a steady (homogeneously) incoming gate/clock preferably from a clock divider.  
 the "unit" homogate is dealing with is always the time interval of the incoming gate.  
@@ -34,10 +36,12 @@ this module gives us the possibility to nudge a locked sequence left and right o
  - 5 x Pushbuttons (for nudging & one future feature)
  - 1 x Box Header 10 pin or 16 pin (for connection to power BUS)
 ## circuit on the breadboard for one instance
-[![Eurorack DIY homogate](media/arduino-eurorack-diy-homogate-circuit-schematics.png "Eurorack DIY homogate breadboard")](https://github.com/othmar52/eurorack-homogate/blob/master/media/arduino-eurorack-diy-homogate-circuit-schematics.png?raw=true)  
+[<img src="media/arduino-eurorack-diy-homogate-circuit-schematics.png" width="300" />](https://github.com/othmar52/eurorack-homogate/blob/master/media/arduino-eurorack-diy-homogate-circuit-schematics.png?raw=true)  
+
 
 ## diy PCB schematics
-[![Eurorack DIY homogate PCB](media/homogate-pcb.png "Eurorack DIY homogate PCB")](https://github.com/othmar52/eurorack-homogate/blob/master/media/homogate-pcb.png?raw=true)  
+[<img src="media/homogate-pcb.png" width="300" />](https://github.com/othmar52/eurorack-homogate/blob/master/media/homogate-pcb.png?raw=true)  
+
 
 module width is **6 HP**  
 module depth incl. power bus cable is **38 mm**  

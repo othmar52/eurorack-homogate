@@ -21,7 +21,7 @@ there are 2 instances of homogate in one 6HP module whilst the gate input from i
 very useful in combination with the TuringMachine (https://github.com/TomWhitwell/TuringMachine)  
 this module gives us the possibility to nudge a locked sequence left and right on the "timeline" by adding or supressing single gate pulses  
 
-[![Eurorack DIY homogate](media/homogate-demo.png "Eurorack homogate demo")](https://github.com/othmar52/eurorack-homogate/blob/master/media/homogate-demo.png?raw=true)  
+[![Eurorack DIY homogate](media/homogate-sheet.svg "Eurorack homogate demo")](https://github.com/othmar52/eurorack-homogate/blob/master/media/homogate-sheet.svg?raw=true)  
 
 ## parts
  - Arduino Nano Every

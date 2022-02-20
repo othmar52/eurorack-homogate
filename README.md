@@ -6,9 +6,9 @@ arduino based eurorack module to
  - add or remove single gate pulses
 
 
-[<img src="media/homogate-disassembled-1.jpg" height="260" />](https://github.com/othmar52/eurorack-homogate/blob/master/media/homogate-disassembled-1.jpg?raw=true)
-[<img src="media/homogate-frontplate.jpg" height="260" />](https://github.com/othmar52/eurorack-homogate/blob/master/media/homogate-frontplate.jpg?raw=true)
-[<img src="media/homogate-assembled-1.jpg" height="260" />](https://github.com/othmar52/eurorack-homogate/blob/master/media/homogate-assembled-1.jpg?raw=true)  
+[<img src="media/homogate-disassembled-1.jpg" height="260" />](https://github.com/othmar52/eurorack-homogate/blob/main/media/homogate-disassembled-1.jpg?raw=true)
+[<img src="media/homogate-frontplate.jpg" height="260" />](https://github.com/othmar52/eurorack-homogate/blob/main/media/homogate-frontplate.jpg?raw=true)
+[<img src="media/homogate-assembled-1.jpg" height="260" />](https://github.com/othmar52/eurorack-homogate/blob/main/media/homogate-assembled-1.jpg?raw=true)  
 
 this module needs a steady (homogeneously) incoming gate/clock preferably from a clock divider.  
 the "unit" homogate is dealing with is always the time interval of the incoming gate.  
@@ -21,7 +21,7 @@ there are 2 instances of homogate in one 6HP module whilst the gate input from i
 very useful in combination with the TuringMachine (https://github.com/TomWhitwell/TuringMachine)  
 this module gives us the possibility to nudge a locked sequence left and right on the "timeline" by adding or supressing single gate pulses  
 
-[![Eurorack DIY homogate](media/homogate-demo.png "Eurorack homogate demo")](https://github.com/othmar52/eurorack-homogate/blob/master/media/homogate-demo.png?raw=true)  
+[![Eurorack DIY homogate](media/homogate-demo.png "Eurorack homogate demo")](https://github.com/othmar52/eurorack-homogate/blob/main/media/homogate-demo.png?raw=true)  
 
 ## parts
  - Arduino Nano Every
@@ -36,11 +36,11 @@ this module gives us the possibility to nudge a locked sequence left and right o
  - 5 x Pushbuttons (for nudging & one future feature)
  - 1 x Box Header 10 pin or 16 pin (for connection to power BUS)
 ## circuit on the breadboard for one instance
-[<img src="media/arduino-eurorack-diy-homogate-circuit-schematics.png" width="300" />](https://github.com/othmar52/eurorack-homogate/blob/master/media/arduino-eurorack-diy-homogate-circuit-schematics.png?raw=true)  
+[<img src="media/arduino-eurorack-diy-homogate-circuit-schematics.png" width="300" />](https://github.com/othmar52/eurorack-homogate/blob/main/media/arduino-eurorack-diy-homogate-circuit-schematics.png?raw=true)  
 
 
 ## diy PCB schematics
-[<img src="media/homogate-pcb.png" width="300" />](https://github.com/othmar52/eurorack-homogate/blob/master/media/homogate-pcb.png?raw=true)  
+[<img src="media/homogate-pcb.png" width="300" />](https://github.com/othmar52/eurorack-homogate/blob/main/media/homogate-pcb.png?raw=true)  
 
 
 module width is **6 HP**  
@@ -50,3 +50,6 @@ i measured a power consumption of **2 mA** (+12V) but i dont know if this is a r
 
 [Homogate on modulargrid](https://www.modulargrid.net/e/other-unknown-homogate)
 
+
+
+see my other [eurorack DIY projects](https://github.com/othmar52/eurorack)

@@ -18,7 +18,7 @@ In case the sum of both potentiometers exceeds 100% the offset pot gets priority
 
 there are 2 instances of homogate in one 6HP module whilst the gate input from instance 1 is normalized to input instance 2  
 
-very useful in combination with the TuringMachine (https://github.com/TomWhitwell/TuringMachine)  
+very useful in combination with the TuringMachine (https://github.com/TomWhitwell/TuringMachine) or any other gate sequencer that does not have a reset functionality  
 this module gives us the possibility to nudge a locked sequence left and right on the "timeline" by adding or supressing single gate pulses  
 
 [![Eurorack DIY homogate](media/homogate-sheet.svg "Eurorack homogate demo")](https://github.com/othmar52/eurorack-homogate/blob/main/media/homogate-sheet.svg?raw=true)  
